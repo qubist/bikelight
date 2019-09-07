@@ -34,6 +34,7 @@ const byte ONBOARD_BUTTON_PIN = 2;
 const int RAINBOW_SPEED = 5;
 const int RED_RAINBOW_SPEED = 10;
 const int NEOPIXEL_BRIGHTNESS = 255;
+const int SWEEP_SPEED = 50;
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
@@ -50,18 +51,15 @@ void setup() {
 
 int onboardButtonState = 0;  // current
 int lastOnboardButtonState = 0;     // previous state of the button
-int lightMode = 0; // 0: rainbow, 1: red circle
-const int NUM_LIGHT_MODES = 2; // the total number of light states
+int lightMode = 0; // 0: rainbow, 1: red circle, 2: red sweep
+const int NUM_LIGHT_MODES = 3; // the total number of light states
 
 void loop() {
 
   onboardButtonState = digitalRead(ONBOARD_BUTTON_PIN);
-  Serial.println(lightMode);
 
-  if (onboardButtonState != lastOnboardButtonState) { // state has changed
-    if (onboardButtonState == HIGH) { // button was pressed down
-      lightMode = ( lightMode + 1 ) % NUM_LIGHT_MODES; // cycle through light states
-    }
+  if (onboardButtonState == HIGH ) { // button was pressed down
+    lightMode = ( lightMode + 1 ) % NUM_LIGHT_MODES; // cycle through light states
   }
 
   if (lightMode == 0) { // rainbow mode
@@ -72,12 +70,6 @@ void loop() {
       }
       // show the update
       strip.show();
-
-      // check if the button is pushed down, and if it is, break out of the loop and switch modes
-      onboardButtonState = digitalRead(ONBOARD_BUTTON_PIN);
-      Serial.println("rainbow buttonState:");
-      Serial.println(onboardButtonState);
-      if (onboardButtonState == 1) { lightMode = ( lightMode + 1 ) % NUM_LIGHT_MODES;onboardButtonState = 0;break; }
  
       delay(RAINBOW_SPEED); // delay according to speed rainbow circulates around the circle
       
@@ -90,22 +82,30 @@ void loop() {
        strip.setPixelColor(i, RedWheel(((i * 256 / strip.numPixels()) + j) & 255));
       }
       strip.show();
-
-      // check if the button is pushed down, and if it is, break out of the loop and switch modes
-      onboardButtonState = digitalRead(ONBOARD_BUTTON_PIN);
-      Serial.println("red circle buttonState:");
-      Serial.println(onboardButtonState);
-      if (onboardButtonState == 1) { lightMode = ( lightMode + 1 ) % NUM_LIGHT_MODES;onboardButtonState = 0;break; }
  
       delay(RED_RAINBOW_SPEED); // delay according to speed rainbow circulates around the circle
       
+    }
+
+  } else if (lightMode == 2) {
+    uint16_t i, j;
+    for(j=0; j<=1; j++) {
+      for(i=0; i<strip.numPixels(); i++) {
+        if (j == 0) {
+          strip.setPixelColor(i, (0,177,255));
+        } else {
+          strip.setPixelColor(i, (0,0,0));
+        }
+        strip.show();
+  
+        delay(SWEEP_SPEED); // delay according to speed rainbow circulates around the circle
+      }
     }
 
   } else {
     Serial.println("this should never happen");
   }
 
-  
 
   lastOnboardButtonState = onboardButtonState;
 }
